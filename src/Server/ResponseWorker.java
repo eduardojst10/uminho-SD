@@ -11,6 +11,7 @@ public class ResponseWorker implements Runnable{
     private BufferedReader inputStream;
     private App app;
     private Socket socket;
+    private String user = null;
 
 
     public ResponseWorker(Socket s,App app) throws IOException {
@@ -53,6 +54,11 @@ public class ResponseWorker implements Runnable{
                 regista(p[1]);
                 break;
 
+            case "INFORMAR":
+                informar(p[1]);
+                break;
+
+
             default:
                 System.out.println("Erro" + p[0]);
                 break;
@@ -77,6 +83,10 @@ public class ResponseWorker implements Runnable{
 
     }
 
+    /*
+    Alterar Login de forma a mandar localizacao
+     */
+
     public void login(String s){
         String[] dados = s.split(",");
         if(app.isOnline(dados[0])){
@@ -86,12 +96,34 @@ public class ResponseWorker implements Runnable{
         if(app.login(dados[0],dados[1])){
             output.println("AUTENTICADO>" + dados[0]);
             this.app.addOnline(dados[0],this);
+            this.user = dados[0];
 
         }else
-            output.println("ERROLOGIN|");
+            output.println("ERROLOGIN>");
         output.flush();
 
     }
+
+    /*
+    Funçao que permite enviar a Localizacao do user em questao
+     */
+
+    public void informar(String str){
+        String[] dados = str.split(",");
+        String user = this.user;
+        int x = Integer.parseInt(dados[0]);
+        int y = Integer.parseInt(dados[1]);
+        if(app.informar(x,y,user)){
+            output.println("LOCALIZACAOATUALIZADA>");
+        }else {
+            output.println("ERROINFORMAR>");
+        }
+        output.flush();
+
+    }
+
+
+
 
 
 }

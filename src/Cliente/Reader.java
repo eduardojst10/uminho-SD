@@ -65,6 +65,17 @@ public class Reader implements Runnable{
                 menu.show();
                 break;
 
+            case ("LOCALIZACAOATUALIZADA"):
+                System.out.println("Localizacao de User atualizada!");
+                menu.alteraEstado(Menu.Estado.AUTENTICADO);
+                menu.show();
+                break;
+
+            case("ERROINFORMAR"):
+                System.out.println("Localizacao já existente ou não existem Localizacoes");
+                menu.alteraEstado(Menu.Estado.AUTENTICADO);
+                menu.show();
+                break;
 
             case ("LOGOUT"):
                 System.out.println();

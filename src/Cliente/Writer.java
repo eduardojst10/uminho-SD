@@ -42,7 +42,14 @@ public class Writer implements  Runnable{
 
 
 
-                case REGISTANDO:
+                case AUTENTICADO:
+                    if(op == 1)
+                        informar();
+
+                    if(op == 2); //rastrear(op);
+
+                    if(op == 3); //comuicar(op);
+
                     break;
 
             }
@@ -75,4 +82,24 @@ public class Writer implements  Runnable{
         menu.alteraEstado(Menu.Estado.MAIN);
         menu.show();
     }
+
+    /*
+    Funçao que permite enviar a Localizacao do user em questao
+     */
+
+    public void informar() throws IOException {
+        String x = menu.lerDadosUser("Coordenada x: ");
+        String y = menu.lerDadosUser("Coordenada y: ");
+        String envia;
+        envia = "INFORMAR" + ">" + x + "," + y ;
+        outputStream.write(envia);
+        outputStream.newLine();
+        outputStream.flush();
+    }
+
+
+
+
+
+
 }

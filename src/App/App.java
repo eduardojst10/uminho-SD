@@ -2,16 +2,19 @@ package App;
 
 import Server.ResponseWorker;
 
+import java.io.DataInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+
 public class App {
     private Mapa mapa;
     private Map<String,String> users;
     private Map<String,ResponseWorker> usersAtivos;
+    private Map<String,String> doentes; //mapa para guardar doentes
     private ReentrantLock lock;
     //private Condition
 
@@ -68,7 +71,7 @@ public class App {
         }
     }
 
-
-
-
+    public boolean informar(int x , int y, String user){
+        return this.mapa.informar(x,y,user);
+    }
 }

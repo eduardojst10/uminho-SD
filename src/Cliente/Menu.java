@@ -9,7 +9,7 @@ public class Menu {
         MAIN,
         AUTENTICADO,
         REGISTANDO,
-        RASTREANDO,
+        INFORMAR,
         COMUNICANDO,
         NOTIFICANDO;
     }
@@ -37,22 +37,16 @@ public class Menu {
                 System.out.print("Opção: ");
                 break;
             case AUTENTICADO:
-                System.out.println("+----------------- MENU CLIENTE ------------------+\n" +
-                        "| 1 - RASTREAR LOCAL                              |\n" +
-                        "| 2 - NOTIFICAR LOCALIZACAO                       |\n" +
-                        "| 3 - COMUNICAR SITUACAO                          |\n" +
+                System.out.println("+----------------- MENU USER ------------------+\n" +
+                        "| 1 - INFORMAR LOCALIZACAO                        |\n" +
+                        "| 2 - RASTREAR LOCALIZACAO                        |\n" +
+                        "| 3 - COMUNICAR DOENCA                            |\n" +
                         "| 0 - LOGOUT                                      |\n" +
                         "+ ------------------------------------------------+\n");
                 System.out.print("Opção: ");
                 break;
-            case REGISTANDO:
-                System.out.println("+------------------- REGISTAR --------------------+\n" +   //ISTO ESTA MAL
-                        "|                                                 |\n" +
-                        "|            A registar User....                  |\n" +
-                        "|                                                 |\n" +
-                        "+ ------------------------------------------------+\n");
-                break;
-            case RASTREANDO:
+
+            case INFORMAR:
                 break;
             case COMUNICANDO:
                 System.out.println("+-------------------------------------------------+\n" +

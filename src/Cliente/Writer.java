@@ -27,6 +27,11 @@ public class Writer implements  Runnable{
         }
     }
 
+    /**
+     * Parser da escolha que o User faz
+     * @param op
+     */
+
     private void parseWriter(Integer op) {
         try {
             switch (this.menu.getEstado()) {
@@ -48,7 +53,7 @@ public class Writer implements  Runnable{
 
                     if(op == 2); //rastrear(op);
 
-                    if(op == 3); //comuicar(op);
+                    if(op == 3); //comunicarD(op);
 
                     break;
 
@@ -58,15 +63,23 @@ public class Writer implements  Runnable{
         }
     }
 
+    /**
+     * Função que permite o User fazer login, se este não estiver
+     * registado então segue para o menu de registar
+     * @param i - operação
+     * @throws IOException
+     */
+
     private void login(int i) throws IOException{
         String username = menu.lerDadosUser("Username: ");
         String password = menu.lerDadosUser("Password: ");
+        String coord = menu.getX()+"," + menu.getY();
         String envia;
         if(i == 1){
-            envia = "AUTENTICA" + ">" + username + "," + password;
+            envia = "AUTENTICA" + ">" + username + "," + password + "," + coord;
 
 
-        }else  envia = "REGISTA" + ">" + username + "," + password;
+        }else  envia = "REGISTA" + ">" + username + "," + password + "," + coord;
 
         outputStream.write(envia);
         outputStream.newLine();
@@ -74,6 +87,11 @@ public class Writer implements  Runnable{
 
 
     }
+
+    /**
+     * Função que permite o User fazer logout
+     * @throws IOException
+     */
 
     private void logout() throws IOException{
         String user = menu.getUser();
@@ -83,18 +101,55 @@ public class Writer implements  Runnable{
         menu.show();
     }
 
-    /*
-    Funçao que permite enviar a Localizacao do user em questao
+    /**
+     * Função que permite o User informar Sistema da sua posição atual
+     * @throws IOException
      */
 
     public void informar() throws IOException {
-        String x = menu.lerDadosUser("Coordenada x: ");
-        String y = menu.lerDadosUser("Coordenada y: ");
+        String xuser = menu.getUser();
         String envia;
-        envia = "INFORMAR" + ">" + x + "," + y ;
+        envia = "INFORMAR" + ">" + xuser ;
         outputStream.write(envia);
         outputStream.newLine();
         outputStream.flush();
+    }
+
+
+
+
+
+
+    /*
+    -Falar sobre por exemplo se um cliente confirmar a doença o menu vai automaticamente alterar para um onde
+    para outro menu
+    -Quando este cliente confirma doença supostamente não pode aceder mais ao cinema
+    ---> Alterar login pois vamos ter de verificar se este cliente está doente ou não
+
+     */
+
+    /**
+     * Função que representa o User confirmar que contraiu doença
+     * @throws IOException
+     */
+
+    public void confirmarD() throws IOException {
+        String resposta = menu.lerDadosUser("Pretente confirmar contracao de sintomas de doenca: ");
+        if(resposta  == "sim") {
+            String user = menu.lerDadosUser("Id de utilizador: ");
+            String envia = "CONFIRMAR" + ">" + user;
+            outputStream.write(envia);
+            outputStream.newLine();
+            outputStream.flush();
+            menu.alteraEstado(Menu.Estado.AUTENTICADOCONTAMINADO);
+            menu.show();
+            //menu.alteraEstado(Menu.Estado.MAIN);
+            //menu.show();
+        }else {
+            menu.alteraEstado(Menu.Estado.AUTENTICADO);
+            menu.show();
+
+        }
     }
 
 

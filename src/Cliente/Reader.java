@@ -31,11 +31,13 @@ public class Reader implements Runnable{
 
     }
 
-    //ler respostas do server para os diferentes casos
+    /**
+     * Função que lê respostas do server para os diferentes casos
+     * @param r
+     */
 
     private void parseReader(String r){
         String[] dados = r.split(">",2);
-        System.out.println(dados);
         switch (dados[0]){
             case ("ALREADYON"):
                 System.out.println("Dados de User/Pass não válidos!");
@@ -65,8 +67,11 @@ public class Reader implements Runnable{
                 menu.show();
                 break;
 
-            case ("LOCALIZACAOATUALIZADA"):
-                System.out.println("Localizacao de User atualizada!");
+            case ("LOCALIZACAOATUAL"):
+                String[] coord = dados[1].split(",");
+                System.out.println("Localização atual: ");
+                System.out.println("X:" + coord[0]);
+                System.out.println("Y:" + coord[1]);
                 menu.alteraEstado(Menu.Estado.AUTENTICADO);
                 menu.show();
                 break;
@@ -77,6 +82,18 @@ public class Reader implements Runnable{
                 menu.show();
                 break;
 
+
+            case ("ADICIONARUSERDOENTE"):
+                System.out.println("User infetado registado e em isolamento!");
+                menu.alteraEstado(Menu.Estado.MAIN);
+                menu.show();
+                break;
+
+            case ("ERROCONFIRMAR"):
+                System.out.println("User não online ou não registado!");
+                menu.alteraEstado(Menu.Estado.MAIN);
+                menu.show();
+                break;
             case ("LOGOUT"):
                 System.out.println();
 

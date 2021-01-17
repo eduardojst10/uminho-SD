@@ -45,4 +45,21 @@ public class Localizacao {
     public void setUsers(List<String> users) {
         this.users = users;
     }
+
+    public String getUser(String user){
+        String ret = null;
+
+        for(String s : users){
+            if(s.equals(user)) ret = s;
+        }
+        return ret;
+    }
+
+    public void removeUser(String user){
+        this.users.remove(user);
+    }
+
+    public void addUser(String user){
+        this.users.add(user);
+    }
 }

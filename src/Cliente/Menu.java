@@ -8,6 +8,7 @@ public class Menu {
     public enum Estado {
         MAIN,
         AUTENTICADO,
+        AUTENTICADOCONTAMINADO,
         REGISTANDO,
         INFORMAR,
         COMUNICANDO,
@@ -18,6 +19,8 @@ public class Menu {
     private Estado estado;
     private Scanner scan;
     private String user;
+    private int x;
+    private int y;
 
     // Construtor vazio (inicia o Menu no 1º menu e state, MAIN)
     public Menu() {
@@ -38,7 +41,7 @@ public class Menu {
                 break;
             case AUTENTICADO:
                 System.out.println("+----------------- MENU USER ------------------+\n" +
-                        "| 1 - INFORMAR LOCALIZACAO                        |\n" +
+                        "| 1 - INFORMAR LOCALIZACAO ATUAL                  |\n" +
                         "| 2 - RASTREAR LOCALIZACAO                        |\n" +
                         "| 3 - COMUNICAR DOENCA                            |\n" +
                         "| 0 - LOGOUT                                      |\n" +
@@ -46,6 +49,14 @@ public class Menu {
                 System.out.print("Opção: ");
                 break;
 
+            case AUTENTICADOCONTAMINADO:
+                System.out.println("+----------------- MENU USER ISOLADO ----------+\n" +
+                        "| 1 - COMUNICAR FINAL DE ISOLAMENTO               |\n" +
+                        "| 2 - RENOVAR ISOLAMENTO                          |\n" +
+                        "| 0 - LOGOUT                                      |\n" +
+                        "+ ------------------------------------------------+\n");
+                System.out.print("Opção: ");
+                break;
             case INFORMAR:
                 break;
             case COMUNICANDO:
@@ -147,5 +158,21 @@ public class Menu {
 
     public Estado getEstado(){
         return this.estado;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
     }
 }

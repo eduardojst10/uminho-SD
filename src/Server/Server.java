@@ -13,10 +13,10 @@ public class Server {
 
         while(true){
             Socket socket = ss.accept();
-            ResponseWorker rw = new ResponseWorker(socket,aplication);
-            System.out.println("Bem Vindo!");
-            Thread client = new Thread(rw);
-            client.start();
+            //ResponseWorker rw = new ResponseWorker(socket,aplication);
+            System.out.println("Welcome!");
+
+            new Thread(new ResponseWorker(socket,aplication)).start();
         }
 
     }

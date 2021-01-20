@@ -2,11 +2,15 @@ package Cliente;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Writer implements  Runnable{
     private Menu menu;
     private BufferedWriter outputStream;
     private Socket socket;
+    private Lock sendLock = new ReentrantLock();
+
 
     public Writer(Menu menu,BufferedWriter out, Socket socket){
         this.menu = menu;
@@ -42,7 +46,6 @@ public class Writer implements  Runnable{
 
                     if(op == 0) logout();
 
-                    //falta o 0;
                    break;
 
 

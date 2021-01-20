@@ -16,6 +16,7 @@ public class Menu {
     }
 
     // Variáveis de Instância
+    private Demultiplexer dem;
     private Estado estado;
     private Scanner scan;
     private String user;
@@ -23,9 +24,10 @@ public class Menu {
     private int y;
 
     // Construtor vazio (inicia o Menu no 1º menu e state, MAIN)
-    public Menu() {
+    public Menu(Demultiplexer dem) {
         scan = new Scanner(System.in);
         this.estado = Estado.MAIN;
+        this.dem = dem;
     }
 
     // Mostra um específico menu de acordo com o "state" atual

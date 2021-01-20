@@ -5,6 +5,7 @@ import Cliente.Input;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.Integer.parseInt;
 
@@ -14,6 +15,7 @@ public class ResponseWorker implements Runnable{
     private App app;
     private Socket socket;
     private String user = null;
+
 
 
     public ResponseWorker(Socket s,App app) throws IOException {

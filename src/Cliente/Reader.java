@@ -5,12 +5,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Reader implements Runnable{
     private Menu menu;
     //private DataInputStream inputStream;
     private BufferedReader bufferedReader;
     private Socket socket;
+    private Lock receiveLock = new ReentrantLock();
 
     public Reader(Menu menu, BufferedReader bf,Socket socket){
         this.menu = menu;
@@ -71,7 +74,7 @@ public class Reader implements Runnable{
                 String[] coord = dados[1].split(",");
                 System.out.println("Localização atual: ");
                 System.out.println("X:" + coord[0]);
-                System.out.println("Y:" + coord[1]);
+                System.out.println ("Y:" + coord[1]);
                 menu.alteraEstado(Menu.Estado.AUTENTICADO);
                 menu.show();
                 break;

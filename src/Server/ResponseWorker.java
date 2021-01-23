@@ -1,178 +1,228 @@
 package Server;
 
-import App.App;
-import Cliente.Input;
-
 import java.io.*;
 import java.net.Socket;
-import java.util.concurrent.locks.ReentrantLock;
-
+import App.App;
+import Cliente.TaggedConnection;
+import Cliente.Frame;
 import static java.lang.Integer.parseInt;
 
-public class ResponseWorker implements Runnable{
-    private PrintWriter output;
-    private BufferedReader inputStream;
+public class ResponseWorker implements Runnable {
+    private final TaggedConnection tg;
     private App app;
-    private Socket socket;
+    // existe um worker por cada cliente, então o próprio worker guarda o username
+    // desse cliente quando ele fizer login
     private String user = null;
 
-
-
-    public ResponseWorker(Socket s,App app) throws IOException {
-            this.inputStream = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            this.socket = s;
-            this.app = app;
-            this.output = new PrintWriter(s.getOutputStream());
-
+    public ResponseWorker(Socket socket, App app) throws IOException {
+        this.tg = new TaggedConnection(socket);
+        this.app = app;
     }
 
     @Override
     public void run() {
-        String line;
-        while(true) {
-            try {
-                line=inputStream.readLine();
-                if(line == null || line.equals("q")) {
-                    socket.shutdownInput();
-                    socket.shutdownOutput();
-                    socket.close();
+        try (tg) {
+            while (true) {
+                Frame frame = tg.receive();
+                int tag = frame.tag;
+                String line = new String(frame.data);
+                if (line.equals("q")) {
                     break;
                 }
-                //System.out.println(socket.getRemoteSocketAddress() +" >> " + line);
-                getOperacoes(line);
-            } catch (IOException e) {
-                e.printStackTrace();
+
+                // THREAD_1: main thread (menu) do user
+                // - é preciso decifrar a mensagem
+                // - efetuar a operação requisitada
+                // - enviar mensagem de retorno
+                // é tudo feito no método getOperacao()
+                if (tag == 1) {
+                    // tratar da operação a fazer
+                    getOperacao(tag, line);
+                }
+                // THREAD_2: thread que envia a localização do user
+                // - é preciso decifrar a mensagem das coordernadas
+                // - atualiza as coordenadas na app
+                // - não precisa enviar mensagem
+                if (tag == 2) {
+                    // thread que apenas envia as coordenadas constantemente
+                    atualizaCoordUser(line);
+                }
             }
+        } catch (Exception e) {
+            // TODO: Quando a ligação for abaixo, fazer logout do user
+            System.out.println("USER DESCONETADO!");
         }
     }
 
     /**
      * Parser das operações disponiveis do server
-     * @param input
+     * @param tag   - tag da mensagem
+     * @param input - dados da mensagem
      */
 
-    private void getOperacoes(String input){
-        String[] p = input.split(">",2);
-        switch (p[0]){
+    private void getOperacao(int tag, String input) throws IOException {
+        String[] p = input.split(">", 2);
+        switch (p[0]) {
             case "AUTENTICA":
-                login(p[1]);
+                login(tag, p[1]);
                 break;
 
             case "REGISTA":
-                regista(p[1]);
+                regista(tag, p[1]);
                 break;
 
             case "INFORMAR":
-                informar(p[1]);
+                informar(tag, p[1]);
                 break;
 
             case "CONFIRMAR:":
-                confirmar(p[1]);
+                confirmar(tag, p[1]);
                 break;
 
-            case "COORD":
-                atualizaCoordUser(p[1]);
+            case "RASTREAR":
+                calculaQuantidadePessoasLocal(tag, p[1]);
                 break;
 
+            case "LOGOUT":
+                logout(tag, p[1]);
+                break;
             default:
                 System.out.println("Erro" + p[0]);
                 break;
-
         }
+    }
 
+    // logout do user, com o user name e as suas coordenadas
+    // (para retirar o user da localização)
+    private void logout(int tag, String username) throws IOException {
+        this.app.logout(username);
+        this.tg.send(tag, "LOGOUTDONE>".getBytes());
+        System.out.println(username + " DESCONETADO!");
+    }
+
+    private void calculaQuantidadePessoasLocal(int tag, String s) throws IOException {
+        String[] dados = s.split(",");
+        int coordX = Integer.parseInt(dados[0]);
+        int coordY = Integer.parseInt(dados[1]);
+        String qtdPessoas = app.calculaQuantidadePessoasLocal(coordX, coordY);
+        this.tg.send(tag, qtdPessoas.getBytes());
     }
 
     /**
-     * Função que atualiza coordenadas de User mal ele entra na app. Sem ação feita por user
+     * Função que atualiza coordenadas de User mal ele entra na app. Sem ação feita
+     * por user
+     *
      * @param s - dados
      */
 
-    public void atualizaCoordUser(String s){
-        String[] dados  = s.split(",");
-        int x = parseInt(dados[0]);
-        int y = parseInt(dados[1]);
-        app.atualizaCoordUser(x,y,this.user);
+    public void atualizaCoordUser(String s) {
+        String[] p = s.split(">", 2);
+        if (p[0].equals("COORD")) {
+            String[] dados = p[1].split(",");
+            int x = parseInt(dados[0]);
+            int y = parseInt(dados[1]);
+            if (this.app.atualizaCoordUser(x, y, this.user)) {
+                System.out.println("ATUALIZOU LOCALIZAÇÃO DE " + this.user + ": (" + x + "," + y + ")");
+            }
+        }
     }
 
     /**
      * Função que regista um User
+     *
      * @param s Dados para registo
      */
 
-    public void regista(String s){
+    public void regista(int tag, String s) throws IOException {
         String[] dados = s.split(",");
-        boolean t = app.registaUser(dados[0],dados[1]);
+        // TODO: inserir coordenadas
+        boolean t = app.registaUser(dados[0], dados[1]);
         System.out.println(dados[0]);
         System.out.println(dados[1]);
-        if(t){
-            output.println("REGISTADOUSER>");
-
-        }else {
-            output.println("ALREADYREG>");
+        if (t) {
+            System.out.println("REGISTOU USER!");
+            String envia = "REGISTADOUSER>";
+            byte[] data = envia.getBytes();
+            this.tg.send(tag, data);
+        } else {
+            System.out.println("USER JÁ REGISTADO!");
+            String envia = "ALREADYREG>";
+            byte[] data = envia.getBytes();
+            this.tg.send(tag, data);
         }
-        output.flush();
-
     }
 
     /**
      * Função de login de um User
+     *
      * @param s User
      */
 
     /*
-    Alterar Login de forma a mandar localizacao
+     * Alterar Login de forma a mandar localizacao
      */
 
-    public void login(String s){
+    public void login(int tag, String s) throws IOException {
         String[] dados = s.split(",");
-        if(app.isOnline(dados[0])){
-            output.println("ALREADYON>");
-            output.flush();
+        System.out.println(dados[0]);
+        System.out.println(dados[1]);
+        if (app.isOnline(dados[0])) {
+            System.out.println("USER JÁ ESTÁ ONLINE NO SERVER!");
+            String envia = "ALREADYON>";
+            byte[] data = envia.getBytes();
+            this.tg.send(tag, data);
+        } else {
+            if (this.app.login(dados[0], dados[1], parseInt(dados[2]), parseInt(dados[3]))) {
+                System.out.println("USER AUTENTICADO!");
+                String envia = "AUTENTICADO>";
+                byte[] data = envia.getBytes();
+                this.user = dados[0];
+                this.app.addOnline(user, this);
+                this.tg.send(tag, data);
+            } else {
+                System.out.println("ERRO NO LOGIN DO USER!");
+                String envia = "ERROLOGIN>";
+                byte[] data = envia.getBytes();
+                this.tg.send(tag, data);
+            }
         }
-        if(app.login(dados[0],dados[1],parseInt(dados[2]),parseInt(dados[3]))){
-            output.println("AUTENTICADO>" + dados[0]);
-            this.app.addOnline(dados[0],this);
-            this.user = dados[0];
-
-        }else
-            output.println("ERROLOGIN>");
-        output.flush();
-
     }
 
     /**
      * Função que envia a Localizacao do User em questão
-     * @param str
+     *
+     * @param str - Dados de Localização a enviar respetivamente
      */
 
-    public void informar(String str){
+    public void informar(int tag, String str) throws IOException {
         String[] dados = this.app.informarAtual(str);
         int x = parseInt(dados[0]);
         int y = parseInt(dados[1]);
-        output.println("LOCALIZACAOATUAL>" + x + "," + y);
-        output.flush();
-
+        String envia = "LOCALIZACAOATUAL>" + x + "," + y;
+        byte[] data = envia.getBytes();
+        this.tg.send(tag, data);
     }
-
 
     /**
      * Função que confirmar doença de User
-     * @param str
+     *
+     * @param str - User a ser confirmado
      */
 
-    public void confirmar(String str){
-        String user = str;
-        if(this.app.confirmar(user)){
-            output.println("ADICIONAUSERDOENTE>");
-        }else{
-            output.println("ERROCONFIRMAR>");
+    public void confirmar(int tag, String str) throws IOException {
+        if (this.app.confirmar(str)) {
+            String envia = "ADICIONAUSERDOENTE>";
+            byte[] data = envia.getBytes();
+            this.tg.send(tag, data);
+        } else {
+            String envia = "ERROCONFIRMAR>";
+            byte[] data = envia.getBytes();
+            this.tg.send(tag, data);
         }
-        output.flush();
-
     }
 
-
-
-
+    public void close() throws IOException {
+        this.tg.close();
+    }
 
 }

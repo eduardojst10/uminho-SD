@@ -1,8 +1,8 @@
 package Cliente;
 
 public class Frame {
-    private final int tag;
-    private final byte[] data;
+    public final int tag;
+    public final byte[] data;
 
     public Frame(int tag, byte[] data) {
         this.tag = tag;

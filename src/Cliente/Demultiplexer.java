@@ -6,102 +6,117 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Demultiplexer implements AutoCloseable{
-    private final Writer connWriter;
-    private final Reader connReader;
-    private final Lock l = new ReentrantLock();
-    private final Map<Integer,Entry> buf = new HashMap<>(); //integer vai ser a tag
-    private IOException exception=null;
+public class Demultiplexer implements AutoCloseable {
+    private final TaggedConnection conn;
 
-    private class Entry{
-        int waiters = 0; //numero de interessados em receber data deste entry
-        final Condition cond = l.newCondition();
+    // será necessário um mapa com as tags e 'entries'.
+    // uma entry terá uma fila de espera.
+    // todas as mensagens têm de ser distribuídas de acordo com a tag
+    private final Map<Integer, Entry> buffer = new HashMap<>();
+
+    // lock para o acesso ao buffer
+    private final ReentrantLock lock = new ReentrantLock();
+
+    //
+    private IOException exception = null;
+
+    // existe uma variável de condição em cada tag
+    private class Entry {
         final ArrayDeque<byte[]> queue = new ArrayDeque<>();
+        final Condition cond = lock.newCondition();
     }
 
-
-
-
-    public Demultiplexer(Writer writer, Reader reader){
-        this.connWriter = writer;
-        this.connReader = reader;
-
+    public Demultiplexer(TaggedConnection taggedConnection) {
+        this.conn = taggedConnection;
     }
 
-    public void close(){
+    private Entry get(int tag) {
+        Entry e = buffer.get(tag);
+        if (e == null) {
+            e = new Entry();
+            buffer.put(tag, e);
+        }
 
+        return e;
     }
 
-    public void start(){
+    //
+    public void start() {
         new Thread(() -> {
-            try{
-                for(;;){
-                    Frame frame = connReader.receive();
-                    l.lock();
+            try {
+                for (; ; ) {
+                    // 1. ler frame da connection
+                    Frame frame = this.conn.receive();
+                    lock.lock();
                     try {
-                        Entry entry = buf.get(frame.tag);
-                        entry.queue.add(frame.data);
-                        entry.cond.signal();
-                    }finally {
-                        l.unlock();
+                        // 2. ler tag da frame, obter a entrada correspondente e inserir na queue
+                        Entry e = get(frame.tag);
+                        e.queue.add(frame.data);
+
+                        // 3. notificar thread que está a aguardar por mensagens
+                        e.cond.signal();
+                    } finally {
+                        lock.unlock();
                     }
                 }
             } catch (IOException e) {
-                l.lock();
-                try{
-                    this.exception = e;
-                    buf.forEach((k,v) -> v.cond.signalAll());
-                }finally {
-                    l.unlock();
-                }
-
+                // ver isto :
+                lock.lock();
+                this.exception = e; // poderia ser antes do lock, mas se for dentro da secção crítica não interessa
+                // se fica antes ou depois (atomicidade)
+                // Sinalizar todas as threads
+                buffer.forEach((k, v) -> v.cond.signalAll());
+                lock.unlock();
+                // Print error
+                System.out.println("Something went wrong: " + e);
             }
         }).start();
     }
 
-    public Entry get(int tag){
-        Entry entry = buf.get(tag);
-        if(entry == null){
-            entry = new Entry();
-            buf.put(tag,entry);
-        }
-        return entry;
+    //
+    public void send(Frame frame) throws IOException {
+        this.conn.send(frame);
     }
 
-    public void send(Frame frame) throws IOException{
-        this.connWriter.send(frame);
+    //
+    public void send(int tag, byte[] data) throws IOException {
+        this.conn.send(tag, data);
     }
 
-    /*
-    public void send(int tag,byte[] data) throws IOException {
-        connWriter.send(tag,data);
-    }
-
-     */
-
-    public byte[] receive(int tag) throws IOException,InterruptedException {
-        l.lock();
+    //
+    public byte[] receive(int tag) throws IOException, InterruptedException {
+        lock.lock();
         try {
-            Entry entry = buf.get(tag);
-            entry.waiters++; //temos um novo interessado
-            for(;;){
-                if(!entry.queue.isEmpty()){
-                    byte[] data = entry.queue.poll();
-                    entry.waiters--;
-                    if(entry.queue.isEmpty() && entry.waiters == 0) buf.remove(tag);
-                    return data;
-                }
-
-                if(this.exception != null) throw exception;
-
-                entry.cond.await();
+            // 1. obtém entrada correspondente à tag pedida
+            Entry e = get(tag);
+            // 2. enquanto não houver mensagens para ler da queue dessa entrada, bloqueia
+            while (e.queue.isEmpty() && this.exception == null) {
+                e.cond.await();
             }
 
+            // NOTA: nesta fase é necessário ver qual é o motivo de saída
+
+            // 2.1. verificar se existe mensagens para ler
+            if (!e.queue.isEmpty()) {
+                // 3. retorna os dados
+                return e.queue.poll();
+            }
+
+            // 2.2. dar manage do erro, fechar se der erro
+            if (this.exception != null) {
+                throw this.exception;
+            }
+
+            return e.queue.poll();
         } finally {
-            l.unlock();
+            lock.unlock();
         }
+    }
+
+    //
+    public void close() throws IOException {
+        this.conn.close();
     }
 }

@@ -2,22 +2,26 @@ package Server;
 
 import App.App;
 
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
-    public static void main(String[] args) throws IOException {
+    final static int WORKERS_PER_CONNECTION = 3;
+
+    public static void main(String[] args) throws Exception {
         ServerSocket ss = new ServerSocket(12345);
-        App aplication = new App();
+        System.out.println("--------- SD SERVER 2021 ---------");
 
-        while(true){
+        App app = new App();
+
+        while (true) {
             Socket socket = ss.accept();
-            //ResponseWorker rw = new ResponseWorker(socket,aplication);
-            System.out.println("Welcome!");
+            System.out.println("--------- CONNECTION " + socket.getLocalPort() + " ESTABLISHED ---------");
 
-            new Thread(new ResponseWorker(socket,aplication)).start();
+            for (int i = 0; i < WORKERS_PER_CONNECTION; ++i)
+                new Thread(new ResponseWorker(socket, app)).start();
         }
-
     }
+
 }
+

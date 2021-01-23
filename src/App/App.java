@@ -174,7 +174,14 @@ public class App {
      */
 
     public String calculaQuantidadePessoasLocal(int coordX, int coordY) {
-        return this.mapa.qtdPessoas(coordX, coordY);
+        String res = null;
+        try {
+            lock.lock();
+            res = this.mapa.qtdPessoas(coordX, coordY);
+        } finally {
+            lock.unlock();
+        }
+        return res;
     }
 
     /**
@@ -201,6 +208,26 @@ public class App {
             lock.unlock();
         }
         return val;
+    }
+
+    /**
+     * Função que permite ao User saber quando não existe ninguem no local
+     * @param flagX
+     * @param flagY
+     * @return
+     */
+
+    public boolean ninguemLocal(Integer flagX, Integer flagY) {
+        boolean res = false;
+        try {
+            lock.lock();
+            if (this.calculaQuantidadePessoasLocal(flagX, flagY).equals("0")) {
+                res = true;
+            }
+        } finally {
+            lock.unlock();
+        }
+        return res;
     }
 
 }

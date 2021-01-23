@@ -2,6 +2,9 @@ package Server;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import App.App;
 import Cliente.TaggedConnection;
 import Cliente.Frame;
@@ -14,6 +17,15 @@ public class ResponseWorker implements Runnable {
     // desse cliente quando ele fizer login
     private String user = null;
 
+    // identificar qual a tag em que terá de notificar o cliente
+    // 1 - notificar se uma localização ficou vazia
+    // 2 - notificar se o this.user este em contacto com alguém infetado
+    private static final int TAG_NOTIFICAR = 3;
+    private Integer flagX = null;
+    private Integer flagY = null;
+    // lock para as flags
+    private Lock lock = new ReentrantLock();
+
     public ResponseWorker(Socket socket, App app) throws IOException {
         this.tg = new TaggedConnection(socket);
         this.app = app;
@@ -22,13 +34,22 @@ public class ResponseWorker implements Runnable {
     @Override
     public void run() {
         try (tg) {
+            new Thread(() -> {
+                try {
+                    while (true) {
+                        Thread.sleep(200);
+                        notificacoes();
+                    }
+                } catch (Exception ignored) {
+                    //
+                }
+            }).start();
+            // antes de receber a mensagem, verifica se existem notificações a realizar
             while (true) {
+                // espera para receber uma mensagem
                 Frame frame = tg.receive();
                 int tag = frame.tag;
                 String line = new String(frame.data);
-                if (line.equals("q")) {
-                    break;
-                }
 
                 // THREAD_1: main thread (menu) do user
                 // - é preciso decifrar a mensagem
@@ -49,13 +70,32 @@ public class ResponseWorker implements Runnable {
                 }
             }
         } catch (Exception e) {
-            // TODO: Quando a ligação for abaixo, fazer logout do user
+            // quando a ligação for abaixo, fazer logout do user
+            this.app.logout(this.user);
             System.out.println("USER DESCONETADO!");
+        }
+    }
+
+    //
+    private void notificacoes() throws IOException {
+        // verificar se existe uma localização para notificar e se está vazia
+        if (this.flagX != null && this.flagY != null && app.ninguemLocal(flagX, flagY)) {
+            // está vazia, então notificar TAG_NOTIFICAR
+            this.tg.send(TAG_NOTIFICAR, ("LOCALDISPONIVEL>" + flagX + "," + flagY).getBytes());
+            // set às flags
+            try {
+                lock.lock();
+                this.flagX = null;
+                this.flagY = null;
+            } finally {
+                lock.unlock();
+            }
         }
     }
 
     /**
      * Parser das operações disponiveis do server
+     *
      * @param tag   - tag da mensagem
      * @param input - dados da mensagem
      */
@@ -77,21 +117,48 @@ public class ResponseWorker implements Runnable {
 
             case "CONFIRMAR:":
                 confirmarDoenca(tag, p[1]);
+                // TODO: quando se verifica doença, verificar quem este em contacto com ele
+                break;
+
+            case "CALCULARPESSOAS":
+                calculaQuantidadePessoasLocal(tag, p[1]);
                 break;
 
             case "RASTREAR":
-                calculaQuantidadePessoasLocal(tag, p[1]);
+                rastrearLocal(p[1]);
                 break;
 
             case "LOGOUT":
                 logout(tag, p[1]);
                 break;
 
-            case "FINAL": //acabar com isolamento
+            case "FINAL": // acabar com isolamento
                 break;
             default:
                 System.out.println("Erro" + p[0]);
                 break;
+        }
+    }
+
+    // rastrear um local
+    private void rastrearLocal(String string) throws IOException {
+        String[] dados = string.split(",");
+        int coordX = Integer.parseInt(dados[0]);
+        int coordY = Integer.parseInt(dados[1]);
+        String qtdPessoas = app.calculaQuantidadePessoasLocal(coordX, coordY);
+        // caso existam pessoas
+        if (!qtdPessoas.equals("0")) {
+            // alterar as flags
+            try {
+                lock.lock();
+                this.flagX = coordX;
+                this.flagY = coordY;
+            } finally {
+                lock.unlock();
+            }
+        } else {
+            // caso não existam pessoas nesse local
+            this.tg.send(TAG_NOTIFICAR, ("LOCALVAZIO>" + coordX + "," + coordY).getBytes());
         }
     }
 
@@ -103,6 +170,7 @@ public class ResponseWorker implements Runnable {
         System.out.println(username + " DESCONETADO!");
     }
 
+    // calcula a quantidade de pessoas num local
     private void calculaQuantidadePessoasLocal(int tag, String s) throws IOException {
         String[] dados = s.split(",");
         int coordX = Integer.parseInt(dados[0]);
@@ -157,7 +225,8 @@ public class ResponseWorker implements Runnable {
 
     /**
      * Função de login de um User
-     *@param s User
+     *
+     * @param s User
      */
 
     /*
@@ -176,22 +245,17 @@ public class ResponseWorker implements Runnable {
         } else {
             if (this.app.login(dados[0], dados[1], parseInt(dados[2]), parseInt(dados[3]))) {
                 /*
-                //se user está doente
-                if(this.app.isDoente(dados[0])){
-                    System.out.println("USER EM ISOLAMENTO");
-                    String envia = "ISOLADO>";
-                    byte[] dataIsolado = envia.getBytes();
-                    this.user = dados[0];
-                    this.tg.send(tag,dataIsolado);
-                }else {
-                }
+                 * //se user está doente if(this.app.isDoente(dados[0])){
+                 * System.out.println("USER EM ISOLAMENTO"); String envia = "ISOLADO>"; byte[]
+                 * dataIsolado = envia.getBytes(); this.user = dados[0];
+                 * this.tg.send(tag,dataIsolado); }else { }
                  */
-                    System.out.println("USER AUTENTICADO!");
-                    String envia = "AUTENTICADO>";
-                    byte[] data = envia.getBytes();
-                    this.user = dados[0];
-                    this.app.addOnline(user, this);
-                    this.tg.send(tag, data);
+                System.out.println("USER AUTENTICADO!");
+                String envia = "AUTENTICADO>";
+                byte[] data = envia.getBytes();
+                this.user = dados[0];
+                this.app.addOnline(user, this);
+                this.tg.send(tag, data);
 
             } else {
                 System.out.println("ERRO NO LOGIN DO USER!");

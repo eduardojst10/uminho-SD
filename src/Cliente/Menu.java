@@ -50,7 +50,7 @@ public class Menu {
     private static final String INDIQUE_Y = "Indique a coordenada Y: ";
     private static final int THREAD_1 = 1;
     private static final int THREAD_2 = 2;
-    // private static final int THREAD_3 = 3; -> vai ser preciso
+    private static final int THREAD_3 = 3;
 
     // Mostra um específico menu de acordo com o "state" atual
     public void show() {
@@ -218,10 +218,13 @@ public class Menu {
                         // alterar posição atual do user
                         alterarLocal();
 
-                    if (op == 2 || op == 3)
+                    if (op == 2)
                         // fazer pedido de quantidade de pessoas num local
-                        rastrearLocal();
+                        qtdPessoasLocal();
 
+                    if (op == 3)
+                        // rastrear um local
+                        rastrearLocal();
                     if (op == 4)
                         // confirmar doença do user
                         confirmarD();
@@ -253,15 +256,15 @@ public class Menu {
         }
     }
 
-    private void rastrearLocal() {
+    // calcular a quantidade de pessoas num local
+    private void qtdPessoasLocal() {
         // ler coordenadas do local
         int coordX = Integer.parseInt(lerDadosUser(INDIQUE_X));
         int coordY = Integer.parseInt(lerDadosUser(INDIQUE_Y));
-        String envia = "RASTREAR>" + coordX + "," + coordY;
+        String envia = "CALCULARPESSOAS>" + coordX + "," + coordY;
         try {
             // send request
             dem.send(THREAD_1, envia.getBytes());
-            Thread.sleep(100);
             // get reply
             byte[] data = dem.receive(THREAD_1);
             // string resposta
@@ -274,6 +277,20 @@ public class Menu {
                 System.out.println("Quantidade de pessoas neste local é: " + resposta);
             }
 
+        } catch (Exception e) {
+            // ignore
+        }
+    }
+
+    // rastrear um local
+    private void rastrearLocal() {
+        // ler coordenadas do local
+        int coordX = Integer.parseInt(lerDadosUser(INDIQUE_X));
+        int coordY = Integer.parseInt(lerDadosUser(INDIQUE_Y));
+        String envia = "RASTREAR>" + coordX + "," + coordY;
+        try {
+            // send request
+            dem.send(THREAD_1, envia.getBytes());
         } catch (Exception e) {
             // ignore
         }
@@ -296,7 +313,6 @@ public class Menu {
         try {
             // send request
             dem.send(THREAD_1, envia.getBytes());
-            Thread.sleep(100);
             // get reply
             byte[] data = dem.receive(THREAD_1);
             // string resposta
@@ -314,7 +330,7 @@ public class Menu {
                                 try {
                                     // send request
                                     while (true) {
-                                        Thread.sleep(5000);
+                                        Thread.sleep(100);
                                         int x1;
                                         int y1;
                                         try {
@@ -334,8 +350,14 @@ public class Menu {
                             new Thread(() -> {
                                 try {
                                     while (true) {
-                                        Thread.sleep(1000);
-                                        // stuff
+                                        // get reply
+                                        byte[] t3data = dem.receive(THREAD_3);
+                                        // string resposta
+                                        String t3response = new String(t3data);
+                                        // neste ponto, a resposta pode ser 2 coisas:
+                                        // - uma localização requisitada ficou vazia
+                                        // - uma notificação de contacto com um doente
+                                        t3responseHandler(t3response);
                                     }
                                 } catch (Exception ignored) {
                                     //
@@ -375,6 +397,28 @@ public class Menu {
         }
     }
 
+    // tratar das mensagens que a thread3 recebe (só se trata de notificações, então
+    // só faz println para o user ver a notificação)
+    private void t3responseHandler(String t3response) {
+        String[] dados = t3response.split(">", 2);
+        switch (dados[0]) {
+            case "LOCALDISPONIVEL":
+                System.out.println("\nO LOCAL " + dados[1] + " já se encontra disponível!");
+                break;
+
+            case "LOCALVAZIO":
+                System.out.println("\nO LOCAL " + dados[1] + " já se encontra disponível!");
+                break;
+
+            case "NOTIFICACAO":
+                System.out.println("ESTEVE EM CONTACTO COM ALGUÉM CONTAMINADO!");
+                break;
+            default:
+                System.out.println("\nExistem " + dados[1] + " pessoas no local!");
+                break;
+        }
+    }
+
     /**
      * Função que permite o User fazer logout
      *
@@ -385,7 +429,6 @@ public class Menu {
     private void logout() throws IOException, InterruptedException {
         // tag == THREAD_1 : neste caso é a main thread
         dem.send(THREAD_1, ("LOGOUT>" + this.username).getBytes());
-        Thread.sleep(100);
         // get reply
         byte[] data = dem.receive(THREAD_1);
         // string resposta

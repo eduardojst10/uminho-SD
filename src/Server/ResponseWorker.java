@@ -76,7 +76,7 @@ public class ResponseWorker implements Runnable {
                 break;
 
             case "CONFIRMAR:":
-                confirmar(tag, p[1]);
+                confirmarDoenca(tag, p[1]);
                 break;
 
             case "RASTREAR":
@@ -85,6 +85,9 @@ public class ResponseWorker implements Runnable {
 
             case "LOGOUT":
                 logout(tag, p[1]);
+                break;
+
+            case "FINAL": //acabar com isolamento
                 break;
             default:
                 System.out.println("Erro" + p[0]);
@@ -154,8 +157,7 @@ public class ResponseWorker implements Runnable {
 
     /**
      * Função de login de um User
-     *
-     * @param s User
+     *@param s User
      */
 
     /*
@@ -173,12 +175,24 @@ public class ResponseWorker implements Runnable {
             this.tg.send(tag, data);
         } else {
             if (this.app.login(dados[0], dados[1], parseInt(dados[2]), parseInt(dados[3]))) {
-                System.out.println("USER AUTENTICADO!");
-                String envia = "AUTENTICADO>";
-                byte[] data = envia.getBytes();
-                this.user = dados[0];
-                this.app.addOnline(user, this);
-                this.tg.send(tag, data);
+                /*
+                //se user está doente
+                if(this.app.isDoente(dados[0])){
+                    System.out.println("USER EM ISOLAMENTO");
+                    String envia = "ISOLADO>";
+                    byte[] dataIsolado = envia.getBytes();
+                    this.user = dados[0];
+                    this.tg.send(tag,dataIsolado);
+                }else {
+                }
+                 */
+                    System.out.println("USER AUTENTICADO!");
+                    String envia = "AUTENTICADO>";
+                    byte[] data = envia.getBytes();
+                    this.user = dados[0];
+                    this.app.addOnline(user, this);
+                    this.tg.send(tag, data);
+
             } else {
                 System.out.println("ERRO NO LOGIN DO USER!");
                 String envia = "ERROLOGIN>";
@@ -209,7 +223,8 @@ public class ResponseWorker implements Runnable {
      * @param str - User a ser confirmado
      */
 
-    public void confirmar(int tag, String str) throws IOException {
+    public void confirmarDoenca(int tag, String str) throws IOException {
+        System.out.println(str);
         if (this.app.confirmar(str)) {
             String envia = "ADICIONAUSERDOENTE>";
             byte[] data = envia.getBytes();

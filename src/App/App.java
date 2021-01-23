@@ -20,6 +20,7 @@ public class App {
         this.users = new HashMap<>();
         this.usersAtivos = new HashMap<>();
         this.historico_users = new HashMap<>();
+        this.doentes = new HashMap<>();
         this.lock = new ReentrantLock();
     }
 
@@ -113,12 +114,23 @@ public class App {
         return this.mapa.informarAtual(user);
     }
 
+    /**
+     * Função que submete um User especifico ao map de  User Doentes removendo dos Users Ativos
+     * @param user - User a submeter
+     * @return - operação com sucesso ou não
+     */
+
     public boolean confirmar(String user) {
         boolean val = false;
-        if (this.users.containsKey(user) && this.usersAtivos.containsKey(user)) {
-            this.usersAtivos.remove(user);
-            this.doentes.put(user, user);
-            val = true;
+        try {
+            lock.lock();
+            if (this.users.containsKey(user) && this.usersAtivos.containsKey(user)) {
+                this.usersAtivos.remove(user);
+                this.doentes.put(user, user);
+                val = true;
+            }
+        }finally {
+            lock.unlock();
         }
         return val;
     }
@@ -154,9 +166,21 @@ public class App {
         return val;
     }
 
+    /**
+     * Função que calcula a quantidade de pessoas num determinada localização
+     * @param coordX - Coordenada x da Localização
+     * @param coordY - Coordenada y da Localização
+     * @return - Número de pessoas
+     */
+
     public String calculaQuantidadePessoasLocal(int coordX, int coordY) {
         return this.mapa.qtdPessoas(coordX, coordY);
     }
+
+    /**
+     * Função que faz logout a um User especifico
+     * @param username
+     */
 
     public void logout(String username) {
         try {
@@ -166,6 +190,17 @@ public class App {
         } finally {
             lock.unlock();
         }
+    }
+
+    public boolean isDoente(String username){
+        boolean val = false;
+        try{
+            val = this.doentes.containsKey(username);
+
+        }finally {
+            lock.unlock();
+        }
+        return val;
     }
 
 }

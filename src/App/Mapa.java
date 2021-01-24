@@ -73,6 +73,7 @@ public class Mapa {
     public List<String> getUsersHistorico(Integer x, Integer y) {
         // procura a localizacao
         for (Localizacao l : this.map) {
+            //
             if (l.getX() == x && l.getY() == y) {
                 // retorna o histórico
                 return l.getHistorico();

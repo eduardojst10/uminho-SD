@@ -63,7 +63,9 @@ public class Localizacao {
 
     public void addUser(String user) {
         this.users.add(user);
-        this.historico.add(user);
+        if (!this.historico.contains(user)) {
+            this.historico.add(user);
+        }
     }
 
     public List<String> getHistorico() {

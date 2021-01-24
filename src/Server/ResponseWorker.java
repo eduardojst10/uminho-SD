@@ -195,7 +195,8 @@ public class ResponseWorker implements Runnable {
             int x = parseInt(dados[0]);
             int y = parseInt(dados[1]);
             if (this.app.atualizaCoordUser(x, y, this.user)) {
-                System.out.println("ATUALIZOU LOCALIZAÇÃO DE " + this.user + ": (" + x + "," + y + ")");
+                // System.out.println("ATUALIZOU LOCALIZAÇÃO DE " + this.user + ": (" + x + ","
+                // + y + ")");
             }
         }
     }

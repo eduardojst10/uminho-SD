@@ -48,6 +48,7 @@ public class Menu {
     private static final String I_STRING = "Insira opção válida!";
     private static final String INDIQUE_X = "Indique a coordenada X: ";
     private static final String INDIQUE_Y = "Indique a coordenada Y: ";
+    private static final String LINE_STRING = "+ ------------------------------------------------+\n";
     private static final int THREAD_1 = 1;
     private static final int THREAD_2 = 2;
     private static final int THREAD_3 = 3;
@@ -72,30 +73,28 @@ public class Menu {
                         + "| 2 - PESSOAS NUMA LOCALIZACAO                    |\n"
                         + "| 3 - RASTREAR LOCALIZACAO                        |\n"
                         + "| 4 - COMUNICAR DOENCA                            |\n"
-                        + "| 0 - LOGOUT                                      |\n"
-                        + "+ ------------------------------------------------+\n");
+                        + "| 0 - LOGOUT                                      |\n" + LINE_STRING);
                 System.out.print(OPCAO_STRING);
                 // ler dados aqui
                 break;
-            
+
             // menu admin
-            case AUTENTICADOADMIN:
-            System.out.println("+----------------- MENU USER ------------------+\n"
-                    + "| 1 - ALTERAR LOCALIZACAO ATUAL                   |\n"
-                    + "| 2 - PESSOAS NUMA LOCALIZACAO                    |\n"
-                    + "| 3 - RASTREAR LOCALIZACAO                        |\n"
-                    + "| 4 - COMUNICAR DOENCA                            |\n"
-                    + "| 0 - LOGOUT                                      |\n"
-                    + "+ ------------------------------------------------+\n");
-            System.out.print(OPCAO_STRING);
-            // ler dados aqui
-            break;
+            case ADMIN:
+                System.out.println("+----------------- MENU USER ------------------+\n"
+                        + "| 1 - ALTERAR LOCALIZACAO ATUAL                   |\n"
+                        + "| 2 - PESSOAS NUMA LOCALIZACAO                    |\n"
+                        + "| 3 - RASTREAR LOCALIZACAO                        |\n"
+                        + "| 4 - COMUNICAR DOENCA                            |\n"
+                        + "| 5 - CARREGAR MAPA                               |\n"
+                        + "| 0 - LOGOUT                                      |\n" + LINE_STRING);
+                System.out.print(OPCAO_STRING);
+                // ler dados aqui
+                break;
             // AUTENTICADO_CONTAMINADO
             case AUTENTICADOCONTAMINADO:
                 System.out.println("+----------------- MENU USER ISOLADO -------------+\n"
                         + "| 1 - COMUNICAR FINAL DE ISOLAMENTO               |\n"
-                        + "| 0 - SAIR DA APLICAÇÃO                           |\n"
-                        + "+ ------------------------------------------------+\n");
+                        + "| 0 - SAIR DA APLICAÇÃO                           |\n" + LINE_STRING);
                 System.out.print(OPCAO_STRING);
                 // ler dados aqui
                 break;
@@ -258,7 +257,7 @@ public class Menu {
                     break;
 
                 case AUTENTICADOCONTAMINADO:
-                    if (op == 1){
+                    if (op == 1) {
                         alteraEstado(Estado.MAIN);
                         // método para comunicar
                         confirmaFinalIsolamento();
@@ -342,14 +341,14 @@ public class Menu {
             // string resposta
             String resposta = new String(data);
             // ver resposta
-            String[] handler = resposta.split(">",2);
+            String[] handler = resposta.split(">", 2);
             // se é autenticado, altera estado do menu
             if (i == 1) {
                 if (handler[0].equals("AUTENTICADO")) {
                     // set do username
                     this.username = user;
                     // caso seja um cliente não contaminado
-                    if(handler[1].equals("1")){
+                    if (handler[1].equals("1")) {
                         // altera estado para autenticado
                         alteraEstado(Estado.AUTENTICADO);
                         // Boas vindas
@@ -357,57 +356,57 @@ public class Menu {
 
                         // abrir threads para comunicar a localização e para receber notificações
                         Thread[] threads = {
-                            // THREAD_2 para mandar localizações
-                            new Thread(() -> {
-                                try {
-                                    // send request
-                                    while (true) {
-                                        Thread.sleep(100);
-                                        int x1;
-                                        int y1;
-                                        try {
-                                            lock.lock();
-                                            x1 = this.getX();
-                                            y1 = this.getY();
-                                            dem.send(THREAD_2, ("COORD>" + x1 + "," + y1).getBytes());
-                                        } finally {
-                                            lock.unlock();
+                                // THREAD_2 para mandar localizações
+                                new Thread(() -> {
+                                    try {
+                                        // send request
+                                        while (true) {
+                                            Thread.sleep(100);
+                                            int x1;
+                                            int y1;
+                                            try {
+                                                lock.lock();
+                                                x1 = this.getX();
+                                                y1 = this.getY();
+                                                dem.send(THREAD_2, ("COORD>" + x1 + "," + y1).getBytes());
+                                            } finally {
+                                                lock.unlock();
+                                            }
                                         }
+                                    } catch (Exception ignored) {
+                                        //
                                     }
-                                } catch (Exception ignored) {
-                                    //
-                                }
-                            }),
-                            // THREAD_3 só para ler coisas do server
-                            new Thread(() -> {
-                                try {
-                                    while (true) {
-                                        // get reply
-                                        byte[] t3data = dem.receive(THREAD_3);
-                                        // string resposta
-                                        String t3response = new String(t3data);
-                                        // neste ponto, a resposta pode ser 2 coisas:
-                                        // - uma localização requisitada ficou vazia
-                                        // - uma notificação de contacto com um doente
-                                        t3responseHandler(t3response);
+                                }),
+                                // THREAD_3 só para ler coisas do server
+                                new Thread(() -> {
+                                    try {
+                                        while (true) {
+                                            // get reply
+                                            byte[] t3data = dem.receive(THREAD_3);
+                                            // string resposta
+                                            String t3response = new String(t3data);
+                                            // neste ponto, a resposta pode ser 2 coisas:
+                                            // - uma localização requisitada ficou vazia
+                                            // - uma notificação de contacto com um doente
+                                            t3responseHandler(t3response);
+                                        }
+                                    } catch (Exception ignored) {
+                                        //
                                     }
-                                } catch (Exception ignored) {
-                                    //
-                                }
                                 }) };
 
-                    // start das threads
-                    for (Thread t : threads)
-                        t.start();
+                        // start das threads
+                        for (Thread t : threads)
+                            t.start();
                     }
 
                     // caso esteja contaminado
-                    else{
+                    else {
                         alteraEstado(Estado.AUTENTICADOCONTAMINADO);
-                    }                    
+                    }
                 }
                 // caso seja ALREADYON
-                 else {
+                else {
                     // avisa se o user já está on, avisa
                     if (handler[0].equals("ALREADYON")) {
                         System.out.println("O user já está online!");
@@ -526,7 +525,7 @@ public class Menu {
         if (resposta.equals("SIM") || resposta.equals("sim")) {
             dem.send(THREAD_1, ("CONFIRMAR" + ">" + this.username).getBytes());
             this.alteraEstado(Menu.Estado.AUTENTICADOCONTAMINADO);
-            // TODO: 
+            // TODO:
         }
     }
 
@@ -534,7 +533,7 @@ public class Menu {
     public void confirmaFinalIsolamento() throws IOException {
         String resposta = this.lerDadosUser("Cumpriu isolamento? [SIM]/[NAO]");
         if (resposta.equals("SIM") || resposta.equals("sim")) {
-                dem.send(THREAD_1, ("FINAL" + ">" + this.username).getBytes());
+            dem.send(THREAD_1, ("FINAL" + ">" + this.username).getBytes());
         } else {
             if (resposta.equals("NAO") || resposta.equals("nao")) {
                 this.alteraEstado(Estado.AUTENTICADOCONTAMINADO);

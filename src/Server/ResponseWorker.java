@@ -117,6 +117,7 @@ public class ResponseWorker implements Runnable {
 
             case "CONFIRMAR":
                 confirmarDoenca(p[1]);
+                this.app.procurarDoentes(p[1]);
                 // TODO: quando se verifica doença, verificar quem este em contacto com ele
                 break;
 

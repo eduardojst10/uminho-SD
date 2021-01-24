@@ -16,7 +16,7 @@ public class Server {
 
         while (true) {
             Socket socket = ss.accept();
-            System.out.println("--------- CONNECTION " + socket.getLocalPort() + " ESTABLISHED ---------");
+            System.out.println("--------- CONNECTION " + socket.getPort() + " ESTABLISHED ---------");
 
             for (int i = 0; i < WORKERS_PER_CONNECTION; ++i)
                 new Thread(new ResponseWorker(socket, app)).start();

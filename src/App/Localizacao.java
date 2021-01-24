@@ -65,4 +65,8 @@ public class Localizacao {
         this.users.add(user);
         this.historico.add(user);
     }
+
+    public List<String> getHistorico() {
+        return this.historico;
+    }
 }

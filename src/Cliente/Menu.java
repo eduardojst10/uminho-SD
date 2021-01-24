@@ -9,7 +9,7 @@ public class Menu {
 
     // Estados possíveis
     public enum Estado {
-        MAIN, AUTENTICADO, AUTENTICADOCONTAMINADO
+        MAIN, ADMIN, AUTENTICADO, AUTENTICADOCONTAMINADO
     }
 
     // lock para conseguir alterar os dados
@@ -77,13 +77,24 @@ public class Menu {
                 System.out.print(OPCAO_STRING);
                 // ler dados aqui
                 break;
-
+            
+            // menu admin
+            case AUTENTICADOADMIN:
+            System.out.println("+----------------- MENU USER ------------------+\n"
+                    + "| 1 - ALTERAR LOCALIZACAO ATUAL                   |\n"
+                    + "| 2 - PESSOAS NUMA LOCALIZACAO                    |\n"
+                    + "| 3 - RASTREAR LOCALIZACAO                        |\n"
+                    + "| 4 - COMUNICAR DOENCA                            |\n"
+                    + "| 0 - LOGOUT                                      |\n"
+                    + "+ ------------------------------------------------+\n");
+            System.out.print(OPCAO_STRING);
+            // ler dados aqui
+            break;
             // AUTENTICADO_CONTAMINADO
             case AUTENTICADOCONTAMINADO:
                 System.out.println("+----------------- MENU USER ISOLADO -------------+\n"
                         + "| 1 - COMUNICAR FINAL DE ISOLAMENTO               |\n"
-                        + "| 2 - RENOVAR ISOLAMENTO                          |\n"
-                        + "| 0 - LOGOUT                                      |\n"
+                        + "| 0 - SAIR DA APLICAÇÃO                           |\n"
                         + "+ ------------------------------------------------+\n");
                 System.out.print(OPCAO_STRING);
                 // ler dados aqui
@@ -126,6 +137,7 @@ public class Menu {
                         c = Integer.parseInt(scan.nextLine());
                     }
                     break;
+
                 case AUTENTICADO:
                     if (c < 0 || c > 4) {
                         System.out.println(I_STRING);
@@ -133,6 +145,15 @@ public class Menu {
                         c = Integer.parseInt(scan.nextLine());
                     }
                     break;
+
+                case AUTENTICADOCONTAMINADO:
+                    if (c < 0 || c > 1) {
+                        System.out.println(I_STRING);
+                        System.out.print(OPCAO_STRING);
+                        c = Integer.parseInt(scan.nextLine());
+                    }
+                    break;
+
                 default:
                     System.out.println("This is my final messsage... goodbye");
             }
@@ -237,12 +258,15 @@ public class Menu {
                     break;
 
                 case AUTENTICADOCONTAMINADO:
-                    if (op == 1)
-                        // TODO: verificar este caso
-                        alteraEstado(Estado.AUTENTICADO);
-
+                    if (op == 1){
+                        alteraEstado(Estado.MAIN);
+                        // método para comunicar
+                        confirmaFinalIsolamento();
+                    }
                     if (op == 0) {
                         logout();
+                        // sair da aplicação
+                        System.exit(1);
                     }
 
                     break;
@@ -317,14 +341,22 @@ public class Menu {
             byte[] data = dem.receive(THREAD_1);
             // string resposta
             String resposta = new String(data);
+            // ver resposta
+            String[] handler = resposta.split(">",2);
             // se é autenticado, altera estado do menu
             if (i == 1) {
-                if (resposta.equals("AUTENTICADO>")) {
+                if (handler[0].equals("AUTENTICADO")) {
+                    // set do username
                     this.username = user;
-                    alteraEstado(Estado.AUTENTICADO);
-                    System.out.println("Seja bem vindo " + username);
+                    // caso seja um cliente não contaminado
+                    if(handler[1].equals("1")){
+                        // altera estado para autenticado
+                        alteraEstado(Estado.AUTENTICADO);
+                        // Boas vindas
+                        System.out.println("Seja bem vindo " + username);
 
-                    Thread[] threads = {
+                        // abrir threads para comunicar a localização e para receber notificações
+                        Thread[] threads = {
                             // THREAD_2 para mandar localizações
                             new Thread(() -> {
                                 try {
@@ -362,30 +394,41 @@ public class Menu {
                                 } catch (Exception ignored) {
                                     //
                                 }
-                            }) };
+                                }) };
 
+                    // start das threads
                     for (Thread t : threads)
                         t.start();
-                } else {
+                    }
+
+                    // caso esteja contaminado
+                    else{
+                        alteraEstado(Estado.AUTENTICADOCONTAMINADO);
+                    }                    
+                }
+                // caso seja ALREADYON
+                 else {
                     // avisa se o user já está on, avisa
-                    if (resposta.equals("ALREADYON>")) {
+                    if (handler[0].equals("ALREADYON")) {
                         System.out.println("O user já está online!");
                     } else {
                         // avisa se ocorreu algum erro com os dados
-                        if (resposta.equals("ERROLOGIN>")) {
+                        if (handler[0].equals("ERROLOGIN>")) {
                             System.out.println("Os dados inseridos não estão corretos!");
                         }
                     }
                 }
-            } else {
+            } // caso seja REGISTADOUSER
+            else {
                 // se conseguiu registar
-                if (resposta.equals("REGISTADOUSER>")) {
+                if (handler[0].equals("REGISTADOUSER")) {
                     System.out.println("Registo efetuado!");
                     System.out.println("Por favor efetue o seu login com os dados que inseriu.");
                     System.out.print(OPCAO_STRING);
-                } else {
+                } // caso seja ALREADYREG
+                else {
                     // caso não tenha conseguido registar-se
-                    if (resposta.equals("ALREADYREG>")) {
+                    if (handler[0].equals("ALREADYREG")) {
                         System.out.println(
                                 "Os dados do user que inseriu já existem! Por favor seleciona opção novamente:");
                         System.out.print(OPCAO_STRING);
@@ -480,10 +523,22 @@ public class Menu {
 
     public void confirmarD() throws IOException {
         String resposta = this.lerDadosUser("Encontra-se doente? [SIM]/[NÃO]");
-        if (resposta.equals("SIM")) {
+        if (resposta.equals("SIM") || resposta.equals("sim")) {
             dem.send(THREAD_1, ("CONFIRMAR" + ">" + this.username).getBytes());
             this.alteraEstado(Menu.Estado.AUTENTICADOCONTAMINADO);
+            // TODO: 
         }
     }
 
+    // user confirma o fim de isolamento
+    public void confirmaFinalIsolamento() throws IOException {
+        String resposta = this.lerDadosUser("Cumpriu isolamento? [SIM]/[NAO]");
+        if (resposta.equals("SIM") || resposta.equals("sim")) {
+                dem.send(THREAD_1, ("FINAL" + ">" + this.username).getBytes());
+        } else {
+            if (resposta.equals("NAO") || resposta.equals("nao")) {
+                this.alteraEstado(Estado.AUTENTICADOCONTAMINADO);
+            }
+        }
+    }
 }

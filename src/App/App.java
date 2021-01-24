@@ -201,9 +201,9 @@ public class App {
 
     public boolean isDoente(String username){
         boolean val = false;
-        try{
+        try {
+            lock.lock();
             val = this.doentes.containsKey(username);
-
         }finally {
             lock.unlock();
         }
@@ -230,4 +230,19 @@ public class App {
         return res;
     }
 
+    // remover o user da lista de doentes
+    public void removeDoente(String user) {
+        this.doentes.remove(user);
+    }
+
+    // procurar os doentes
+    public void procurarDoentes(String username) {
+        // pegar no histórico das localizações do username
+        for(Map.Entry<Integer, Integer>> par : this.historico_users.get(username)){
+            // para cada user de cada par
+            for(String user : this.mapa.getUsersHistorico(par.getKey(), par.getValue())){
+                this.usersAtivos.get(user).comunicarDoenca();
+            }
+        }
+    }
 }

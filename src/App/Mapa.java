@@ -89,4 +89,15 @@ public class Mapa {
         this.map.add(new Localizacao(coordX, coordY, new ArrayList<>(), new ArrayList<>()));
         return qtd;
     }
+
+    // get do histórico de users de uma localização
+    public List<String> getUsersHistorico(Integer x, Integer y) {
+        // procura a localizacao
+        for (Localizacao l : this.map) {
+            if (l.getX() == x && l.getY() == y) {
+                // retorna o histórico
+                return l.getHistorico();
+            }
+        }
+    }
 }

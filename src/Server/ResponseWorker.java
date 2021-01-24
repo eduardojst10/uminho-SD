@@ -115,8 +115,8 @@ public class ResponseWorker implements Runnable {
                 informar(tag, p[1]);
                 break;
 
-            case "CONFIRMAR:":
-                confirmarDoenca(tag, p[1]);
+            case "CONFIRMAR":
+                confirmarDoenca(p[1]);
                 // TODO: quando se verifica doença, verificar quem este em contacto com ele
                 break;
 
@@ -133,6 +133,7 @@ public class ResponseWorker implements Runnable {
                 break;
 
             case "FINAL": // acabar com isolamento
+                acabarIsolamento(p[1]);
                 break;
             default:
                 System.out.println("Erro" + p[0]);
@@ -244,14 +245,14 @@ public class ResponseWorker implements Runnable {
             this.tg.send(tag, data);
         } else {
             if (this.app.login(dados[0], dados[1], parseInt(dados[2]), parseInt(dados[3]))) {
-                /*
-                 * //se user está doente if(this.app.isDoente(dados[0])){
-                 * System.out.println("USER EM ISOLAMENTO"); String envia = "ISOLADO>"; byte[]
-                 * dataIsolado = envia.getBytes(); this.user = dados[0];
-                 * this.tg.send(tag,dataIsolado); }else { }
-                 */
+                
+                int flag = 1;
+                if(this.app.isDoente(dados[0])){
+                    flag = 0;
+                }
+                 
                 System.out.println("USER AUTENTICADO!");
-                String envia = "AUTENTICADO>";
+                String envia = "AUTENTICADO>" + flag;
                 byte[] data = envia.getBytes();
                 this.user = dados[0];
                 this.app.addOnline(user, this);
@@ -287,21 +288,20 @@ public class ResponseWorker implements Runnable {
      * @param str - User a ser confirmado
      */
 
-    public void confirmarDoenca(int tag, String str) throws IOException {
-        System.out.println(str);
-        if (this.app.confirmar(str)) {
-            String envia = "ADICIONAUSERDOENTE>";
-            byte[] data = envia.getBytes();
-            this.tg.send(tag, data);
-        } else {
-            String envia = "ERROCONFIRMAR>";
-            byte[] data = envia.getBytes();
-            this.tg.send(tag, data);
-        }
+    public void confirmarDoenca(String str){
+        this.app.confirmar(str);
     }
 
     public void close() throws IOException {
         this.tg.close();
+    }
+
+    public void acabarIsolamento(String string) {
+        this.app.removeDoente(string);
+    }
+
+    public void comunicarDoenca() {
+        this.tg.send(THREAD_3, ("NOTIFICACAO>").getBytes());
     }
 
 }

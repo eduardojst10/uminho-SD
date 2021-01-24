@@ -99,5 +99,6 @@ public class Mapa {
                 return l.getHistorico();
             }
         }
+        return new ArrayList<>();
     }
 }

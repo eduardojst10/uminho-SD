@@ -245,12 +245,12 @@ public class ResponseWorker implements Runnable {
             this.tg.send(tag, data);
         } else {
             if (this.app.login(dados[0], dados[1], parseInt(dados[2]), parseInt(dados[3]))) {
-                
+
                 int flag = 1;
-                if(this.app.isDoente(dados[0])){
+                if (this.app.isDoente(dados[0])) {
                     flag = 0;
                 }
-                 
+
                 System.out.println("USER AUTENTICADO!");
                 String envia = "AUTENTICADO>" + flag;
                 byte[] data = envia.getBytes();
@@ -288,7 +288,7 @@ public class ResponseWorker implements Runnable {
      * @param str - User a ser confirmado
      */
 
-    public void confirmarDoenca(String str){
+    public void confirmarDoenca(String str) {
         this.app.confirmar(str);
     }
 
@@ -300,8 +300,8 @@ public class ResponseWorker implements Runnable {
         this.app.removeDoente(string);
     }
 
-    public void comunicarDoenca() {
-        this.tg.send(THREAD_3, ("NOTIFICACAO>").getBytes());
+    public void comunicarDoenca() throws IOException {
+        this.tg.send(TAG_NOTIFICAR, ("NOTIFICACAO>").getBytes());
     }
 
 }

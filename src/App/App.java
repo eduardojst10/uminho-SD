@@ -2,6 +2,7 @@ package App;
 
 import Server.ResponseWorker;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -74,7 +75,7 @@ public class App {
      * Função que adiciona User à lista de Users Online
      *
      * @param user -User
-     * @param rw - ResponserWorker associado a esse User
+     * @param rw   - ResponserWorker associado a esse User
      */
 
     public void addOnline(String user, ResponseWorker rw) {
@@ -115,7 +116,9 @@ public class App {
     }
 
     /**
-     * Função que submete um User especifico ao map de  User Doentes removendo dos Users Ativos
+     * Função que submete um User especifico ao map de User Doentes removendo dos
+     * Users Ativos
+     * 
      * @param user - User a submeter
      * @return - operação com sucesso ou não
      */
@@ -129,7 +132,7 @@ public class App {
                 this.doentes.put(user, user);
                 val = true;
             }
-        }finally {
+        } finally {
             lock.unlock();
         }
         return val;
@@ -138,8 +141,8 @@ public class App {
     /**
      * Função que atualiza Localizacao do User
      *
-     * @param x - Coordenada x
-     * @param y - Coordenada y
+     * @param x    - Coordenada x
+     * @param y    - Coordenada y
      * @param user - User a atualizar
      * @return boolean dependendo se a função foi bem realizada com sucesso
      */
@@ -168,6 +171,7 @@ public class App {
 
     /**
      * Função que calcula a quantidade de pessoas num determinada localização
+     * 
      * @param coordX - Coordenada x da Localização
      * @param coordY - Coordenada y da Localização
      * @return - Número de pessoas
@@ -186,6 +190,7 @@ public class App {
 
     /**
      * Função que faz logout a um User especifico
+     * 
      * @param username
      */
 
@@ -199,12 +204,12 @@ public class App {
         }
     }
 
-    public boolean isDoente(String username){
+    public boolean isDoente(String username) {
         boolean val = false;
         try {
             lock.lock();
             val = this.doentes.containsKey(username);
-        }finally {
+        } finally {
             lock.unlock();
         }
         return val;
@@ -212,6 +217,7 @@ public class App {
 
     /**
      * Função que permite ao User saber quando não existe ninguem no local
+     * 
      * @param flagX
      * @param flagY
      * @return
@@ -236,11 +242,11 @@ public class App {
     }
 
     // procurar os doentes
-    public void procurarDoentes(String username) {
+    public void procurarDoentes(String username) throws IOException {
         // pegar no histórico das localizações do username
-        for(Map.Entry<Integer, Integer>> par : this.historico_users.get(username)){
+        for (Map.Entry<Integer, Integer> par : this.historico_users.get(username)) {
             // para cada user de cada par
-            for(String user : this.mapa.getUsersHistorico(par.getKey(), par.getValue())){
+            for (String user : this.mapa.getUsersHistorico(par.getKey(), par.getValue())) {
                 this.usersAtivos.get(user).comunicarDoenca();
             }
         }

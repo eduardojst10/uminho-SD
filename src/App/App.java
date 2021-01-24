@@ -164,7 +164,7 @@ public class App {
             if (this.usersAtivos.containsKey(user)) {
                 this.mapa.removerUser(user);
                 this.mapa.adicionaUser(user, x, y);
-                if (this.historico_users.containsKey(user)) {
+                if (this.historico_users.containsKey(user) && historicoNaoTemLocal(user, x, y)) {
                     this.historico_users.get(user).add(new AbstractMap.SimpleEntry<>(x, y));
                 } else {
                     List<Map.Entry<Integer, Integer>> array = new ArrayList<>();
@@ -177,6 +177,24 @@ public class App {
             lock.unlock();
         }
         return val;
+    }
+
+    // verifica se o histórico de um user já não tem um local
+    private boolean historicoNaoTemLocal(String user, int x, int y) {
+        try {
+            lock.lock();
+            // pega em cada par do historico_users do user
+            for (Map.Entry<Integer, Integer> par : this.historico_users.get(user)) {
+                // verifica se existe
+                if (par.getKey() == x && par.getValue() == y) {
+                    // se existe, return false
+                    return false;
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        return true;
     }
 
     /**

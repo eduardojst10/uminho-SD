@@ -524,9 +524,8 @@ public class Menu {
     public void confirmarD() throws IOException {
         String resposta = this.lerDadosUser("Encontra-se doente? [SIM]/[NÃO]");
         if (resposta.equals("SIM") || resposta.equals("sim")) {
-            dem.send(THREAD_1, ("CONFIRMAR" + ">" + this.username).getBytes());
-            this.alteraEstado(Menu.Estado.AUTENTICADOCONTAMINADO);
-            // TODO:
+            dem.send(THREAD_1, ("CONFIRMAR>" + this.username).getBytes());
+            this.alteraEstado(Estado.AUTENTICADOCONTAMINADO);
         }
     }
 

@@ -79,7 +79,12 @@ public class App {
      */
 
     public void addOnline(String user, ResponseWorker rw) {
-        this.usersAtivos.put(user, rw);
+        try {
+            lock.lock();
+            this.usersAtivos.put(user, rw);
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -112,7 +117,12 @@ public class App {
      */
 
     public String[] informarAtual(String user) {
-        return this.mapa.informarAtual(user);
+        try {
+            lock.lock();
+            return this.mapa.informarAtual(user);
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -238,17 +248,27 @@ public class App {
 
     // remover o user da lista de doentes
     public void removeDoente(String user) {
-        this.doentes.remove(user);
+        try {
+            lock.lock();
+            this.doentes.remove(user);
+        } finally {
+            lock.unlock();
+        }
     }
 
     // procurar os doentes
     public void procurarDoentes(String username) throws IOException {
-        // pegar no histórico das localizações do username
-        for (Map.Entry<Integer, Integer> par : this.historico_users.get(username)) {
-            // para cada user de cada par
-            for (String user : this.mapa.getUsersHistorico(par.getKey(), par.getValue())) {
-                this.usersAtivos.get(user).comunicarDoenca();
+        try {
+            lock.lock();
+            // pegar no histórico das localizações do username
+            for (Map.Entry<Integer, Integer> par : this.historico_users.get(username)) {
+                // para cada user de cada par
+                for (String user : this.mapa.getUsersHistorico(par.getKey(), par.getValue())) {
+                    this.usersAtivos.get(user).comunicarDoenca();
+                }
             }
+        } finally {
+            lock.unlock();
         }
     }
 }

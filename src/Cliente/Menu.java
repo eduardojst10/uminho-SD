@@ -389,6 +389,7 @@ public class Menu {
                                             // - uma localização requisitada ficou vazia
                                             // - uma notificação de contacto com um doente
                                             t3responseHandler(t3response);
+                                            Thread.sleep(100); // ver se faz falta
                                         }
                                     } catch (Exception ignored) {
                                         //

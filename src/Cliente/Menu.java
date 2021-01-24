@@ -454,7 +454,7 @@ public class Menu {
                 break;
 
             case "NOTIFICACAO":
-                System.out.println("ESTEVE EM CONTACTO COM ALGUÉM CONTAMINADO!");
+                System.out.println("\nESTEVE EM CONTACTO COM ALGUÉM CONTAMINADO!");
                 break;
             default:
                 System.out.println("\nExistem " + dados[1] + " pessoas no local!");

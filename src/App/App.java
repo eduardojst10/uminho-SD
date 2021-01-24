@@ -268,7 +268,9 @@ public class App {
             for (Map.Entry<Integer, Integer> par : this.historico_users.get(username)) {
                 // para cada user de cada par
                 for (String user : this.mapa.getUsersHistorico(par.getKey(), par.getValue())) {
-                    this.usersAtivos.get(user).comunicarDoenca();
+                    // não pode comunicar a si próprio
+                    if (!user.equals(username))
+                        this.usersAtivos.get(user).comunicarDoenca();
                 }
             }
         } finally {

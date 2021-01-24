@@ -30,27 +30,6 @@ public class Mapa {
         this.map = map;
     }
 
-    /*
-     * if(l.getUsers().contains(user)) {
-     *
-     * }
-     */
-    public String[] informarAtual(String user) {
-        String coord = null;
-        for (Localizacao l : map) {
-            coord = l.getX() + "," + l.getY();
-        }
-
-        // se existe localização, retorna split
-        if (coord != null) {
-            return coord.split(",");
-        }
-
-        // caso contrário retorna array nulo
-        String[] dados = {};
-        return dados;
-    }
-
     public void removerUser(String user) {
         for (Localizacao l : map) {
             if (l.getUsers().contains(user)) {

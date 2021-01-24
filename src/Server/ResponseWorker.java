@@ -111,10 +111,6 @@ public class ResponseWorker implements Runnable {
                 regista(tag, p[1]);
                 break;
 
-            case "INFORMAR":
-                informar(tag, p[1]);
-                break;
-
             case "CONFIRMAR":
                 confirmarDoenca(p[1]);
                 // TODO: quando se verifica doença, verificar quem este em contacto com ele
@@ -270,21 +266,6 @@ public class ResponseWorker implements Runnable {
     }
 
     /**
-     * Função que envia a Localizacao do User em questão
-     *
-     * @param str - Dados de Localização a enviar respetivamente
-     */
-
-    public void informar(int tag, String str) throws IOException {
-        String[] dados = this.app.informarAtual(str);
-        int x = parseInt(dados[0]);
-        int y = parseInt(dados[1]);
-        String envia = "LOCALIZACAOATUAL>" + x + "," + y;
-        byte[] data = envia.getBytes();
-        this.tg.send(tag, data);
-    }
-
-    /**
      * Função que confirmar doença de User
      *
      * @param str - User a ser confirmado
@@ -305,5 +286,4 @@ public class ResponseWorker implements Runnable {
     public void comunicarDoenca() throws IOException {
         this.tg.send(TAG_NOTIFICAR, ("NOTIFICACAO>").getBytes());
     }
-
 }

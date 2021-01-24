@@ -110,22 +110,6 @@ public class App {
     }
 
     /**
-     * Função que providencia Localização atual do User
-     *
-     * @param user - User recebido
-     * @return Coordenadas X e Y
-     */
-
-    public String[] informarAtual(String user) {
-        try {
-            lock.lock();
-            return this.mapa.informarAtual(user);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
      * Função que submete um User especifico ao map de User Doentes removendo dos
      * Users Ativos
      * 
@@ -164,8 +148,10 @@ public class App {
             if (this.usersAtivos.containsKey(user)) {
                 this.mapa.removerUser(user);
                 this.mapa.adicionaUser(user, x, y);
-                if (this.historico_users.containsKey(user) && historicoNaoTemLocal(user, x, y)) {
-                    this.historico_users.get(user).add(new AbstractMap.SimpleEntry<>(x, y));
+                if (this.historico_users.containsKey(user)) {
+                    if (!historicoTemLocal(user, x, y)) {
+                        this.historico_users.get(user).add(new AbstractMap.SimpleEntry<>(x, y));
+                    }
                 } else {
                     List<Map.Entry<Integer, Integer>> array = new ArrayList<>();
                     array.add(new AbstractMap.SimpleEntry<>(x, y));
@@ -180,7 +166,7 @@ public class App {
     }
 
     // verifica se o histórico de um user já não tem um local
-    private boolean historicoNaoTemLocal(String user, int x, int y) {
+    private boolean historicoTemLocal(String user, int x, int y) {
         try {
             lock.lock();
             // pega em cada par do historico_users do user
@@ -188,13 +174,13 @@ public class App {
                 // verifica se existe
                 if (par.getKey() == x && par.getValue() == y) {
                     // se existe, return false
-                    return false;
+                    return true;
                 }
             }
         } finally {
             lock.unlock();
         }
-        return true;
+        return false;
     }
 
     /**

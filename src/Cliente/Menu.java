@@ -251,6 +251,8 @@ public class Menu {
                         alteraEstado(Estado.MAIN);
                         // método para comunicar
                         confirmaFinalIsolamento();
+                        // manda mensagem para efetuar logout, para fazer login novamente
+                        logout();
                     }
                     if (op == 0) {
                         logout();
@@ -520,13 +522,11 @@ public class Menu {
     }
 
     // user confirma o fim de isolamento
-    public void confirmaFinalIsolamento() throws IOException, InterruptedException {
+    public void confirmaFinalIsolamento() throws IOException {
         String resposta = this.lerDadosUser("Cumpriu isolamento? [SIM]/[NAO]");
         if (resposta.equals("SIM") || resposta.equals("sim")) {
             // manda mensagem para final do isolamento
             dem.send(THREAD_1, ("FINAL" + ">" + this.username).getBytes());
-            // manda mensagem para efetuar logout, para fazer login novamente
-            logout();
         } else {
             if (resposta.equals("NAO") || resposta.equals("nao")) {
                 this.alteraEstado(Estado.AUTENTICADOCONTAMINADO);

@@ -5,6 +5,8 @@ import java.util.Scanner;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import Connections.Demultiplexer;
+
 public class Menu {
 
     // Estados possíveis

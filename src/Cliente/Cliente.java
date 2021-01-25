@@ -1,6 +1,8 @@
 package Cliente;
 
 import java.net.Socket;
+import Connections.TaggedConnection;
+import Connections.Demultiplexer;
 
 public class Cliente {
     public static void main(String[] args) throws Exception {

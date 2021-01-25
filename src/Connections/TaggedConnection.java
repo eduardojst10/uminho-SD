@@ -1,4 +1,4 @@
-package Cliente;
+package Connections;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

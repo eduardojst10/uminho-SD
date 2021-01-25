@@ -1,4 +1,4 @@
-package Cliente;
+package Connections;
 
 public class Frame {
     public final int tag;

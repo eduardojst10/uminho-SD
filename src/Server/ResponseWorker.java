@@ -6,8 +6,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import App.App;
-import Cliente.TaggedConnection;
-import Cliente.Frame;
+import Connections.TaggedConnection;
+import Connections.Frame;
 import static java.lang.Integer.parseInt;
 
 public class ResponseWorker implements Runnable {

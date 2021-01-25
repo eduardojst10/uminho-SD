@@ -1,5 +1,4 @@
-package Cliente;
-
+package Connections;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -46,7 +45,7 @@ public class Demultiplexer implements AutoCloseable {
     public void start() {
         new Thread(() -> {
             try {
-                for (; ; ) {
+                for (;;) {
                     // 1. ler frame da connection
                     Frame frame = this.conn.receive();
                     lock.lock();

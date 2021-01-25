@@ -13,7 +13,5 @@ public class Cliente {
         m.start();
         // criar menu, com este demultiplexer
         new Menu(m);
-
-        // m.close(); -> fechar no menu
     }
 }

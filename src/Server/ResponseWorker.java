@@ -132,10 +132,18 @@ public class ResponseWorker implements Runnable {
             case "FINAL": // acabar com isolamento
                 acabarIsolamento(p[1]);
                 break;
+
+            case "BACKUP":
+                backup(tag);
+                break;
             default:
                 System.out.println("Erro" + p[0]);
                 break;
         }
+    }
+
+    private void backup(int tag) throws IOException {
+        this.tg.send(tag, (this.app.backUpMapa()).getBytes());
     }
 
     // rastrear um local
@@ -278,9 +286,20 @@ public class ResponseWorker implements Runnable {
         this.tg.close();
     }
 
+    /**
+     * Função que remove o User da lista de doentes
+     *
+     * @param string - User a ser removido
+     */
+
     public void acabarIsolamento(String string) {
         this.app.removeDoente(string);
     }
+
+    /**
+     * Notificação do Server aos Clientes que estiveram supostamente em contacto com
+     * o Cliente Doente
+     */
 
     public void comunicarDoenca() throws IOException {
         this.tg.send(TAG_NOTIFICAR, ("NOTIFICACAO>").getBytes());

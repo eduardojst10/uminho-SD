@@ -277,4 +277,39 @@ public class App {
             lock.unlock();
         }
     }
+
+    //
+    public String backUpMapa() {
+        StringBuilder sb = new StringBuilder();
+        try {
+            lock.lock();
+            // iterar as localizações
+            for (Localizacao l : this.mapa.getMapa()) {
+                // append da localização
+                sb.append("(" + l.getX() + "," + l.getY() + ") :");
+                // append do histórico de users que já passou neste local
+                sb.append("Quantidade de utilizadores que já passaram aqui: "
+                        + mapa.getUsersHistorico(l.getX(), l.getY()).size() + "; ");
+                // append do histórico de users doentes que já passou neste local
+                sb.append("Quantidade de utilizadores doentes que já passaram aqui: "
+                        + doentesPorHistorico(mapa.getUsersHistorico(l.getX(), l.getY())) + "\n");
+            }
+        } finally {
+            lock.unlock();
+        }
+        return sb.toString();
+    }
+
+    public int doentesPorHistorico(List<String> historico) {
+        Set<String> historicoDoentes = new HashSet<>(this.doentes.keySet());
+        int count = 0;
+        for (String doente : historicoDoentes) {
+            for (String d : historico) {
+                if (d.equals(doente))
+                    count++;
+            }
+        }
+        return count;
+    }
+
 }

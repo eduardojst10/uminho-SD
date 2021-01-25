@@ -9,7 +9,7 @@ public class Menu {
 
     // Estados possíveis
     public enum Estado {
-        MAIN, ADMIN, AUTENTICADO, AUTENTICADOCONTAMINADO
+        MAIN, AUTENTICADO, AUTENTICADOCONTAMINADO
     }
 
     // lock para conseguir alterar os dados
@@ -78,18 +78,6 @@ public class Menu {
                 // ler dados aqui
                 break;
 
-            // menu admin
-            case ADMIN:
-                System.out.println("+----------------- MENU USER ------------------+\n"
-                        + "| 1 - ALTERAR LOCALIZACAO ATUAL                   |\n"
-                        + "| 2 - PESSOAS NUMA LOCALIZACAO                    |\n"
-                        + "| 3 - RASTREAR LOCALIZACAO                        |\n"
-                        + "| 4 - COMUNICAR DOENCA                            |\n"
-                        + "| 5 - CARREGAR MAPA                               |\n"
-                        + "| 0 - LOGOUT                                      |\n" + LINE_STRING);
-                System.out.print(OPCAO_STRING);
-                // ler dados aqui
-                break;
             // AUTENTICADO_CONTAMINADO
             case AUTENTICADOCONTAMINADO:
                 System.out.println("+----------------- MENU USER ISOLADO -------------+\n"

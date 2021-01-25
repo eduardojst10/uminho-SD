@@ -278,7 +278,8 @@ public class App {
         }
     }
 
-    //
+    // fazer o backup do mapa com quantidade do histórico de users e doentes por
+    // cada localização
     public String backUpMapa() {
         StringBuilder sb = new StringBuilder();
         try {
@@ -300,6 +301,7 @@ public class App {
         return sb.toString();
     }
 
+    // calcular doentes por histórico
     public int doentesPorHistorico(List<String> historico) {
         Set<String> historicoDoentes = new HashSet<>(this.doentes.keySet());
         int count = 0;
